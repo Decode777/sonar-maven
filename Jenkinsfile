@@ -1,9 +1,15 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'sonarmaven' // Configure Maven in Jenkins (Manage Jenkins > Global Tool Configuration)
+    }
+
     environment {
-        // Define global environment variables if needed
-        MAVEN_HOME = tool(name: 'Maven', type: 'maven')
+        // Environment variables
+        SONAR_TOKEN = credentials('Sonarqube-token') // Replace with your SonarQube token credentials ID
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17' // Update with the path to your Java installation
+        PATH = "${JAVA_HOME}\\bin;${env.PATH}"
     }
 
     stages {
@@ -17,7 +23,7 @@ pipeline {
             steps {
                 // Build the project using Maven
                 script {
-                    sh "${MAVEN_HOME}/bin/mvn clean compile"
+                    sh "mvn clean compile"
                 }
             }
         }
@@ -25,7 +31,7 @@ pipeline {
             steps {
                 // Run unit tests using Maven
                 script {
-                    sh "${MAVEN_HOME}/bin/mvn test"
+                    sh "mvn test"
                 }
             }
         }
@@ -33,7 +39,21 @@ pipeline {
             steps {
                 // Package the application
                 script {
-                    sh "${MAVEN_HOME}/bin/mvn package"
+                    sh "mvn package"
+                }
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                // Execute SonarQube analysis
+                script {
+                    sh """
+                        mvn clean verify sonar:sonar \
+                          -Dsonar.projectKey=sonarmaven \
+                          -Dsonar.projectName='sonarmaven' \
+                          -Dsonar.host.url=http://localhost:9000 \
+                          -Dsonar.login=${SONAR_TOKEN}
+                    """
                 }
             }
         }
@@ -51,10 +71,10 @@ pipeline {
             cleanWs()
         }
         success {
-            echo 'Build and test stages completed successfully!'
+            echo 'Pipeline executed successfully, including SonarQube analysis!'
         }
         failure {
-            echo 'Build or test failed. Please check the logs.'
+            echo 'Pipeline failed. Please check the logs for details.'
         }
     }
 }
