@@ -2,76 +2,54 @@ pipeline {
     agent any
 
     tools {
-        maven 'sonarmaven' // Configure Maven in Jenkins (Manage Jenkins > Global Tool Configuration)
+        maven 'sonarmaven' // Ensure Maven is configured in Jenkins
     }
 
     environment {
-        // Environment variables
-        SONAR_TOKEN = credentials('sonar-token') // Replace with your SonarQube token credentials ID
-        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17' // Update with the path to your Java installation
+        SONAR_TOKEN = credentials('Sonarqube-token') // Replace with the correct credentials ID
+        JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17' // Ensure this path is correct
         PATH = "${JAVA_HOME}\\bin;${env.PATH}"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Check out code from the source repository
                 checkout scm
             }
         }
         stage('Build') {
             steps {
-                // Build the project using Maven
-                script {
-                    sh "mvn clean compile"
-                }
+                bat "mvn clean compile"
             }
         }
         stage('Test') {
             steps {
-                // Run unit tests using Maven
-                script {
-                    sh "mvn test"
-                }
-            }
-        }
-        stage('Package') {
-            steps {
-                // Package the application
-                script {
-                    sh "mvn package"
-                }
+                bat "mvn test"
             }
         }
         stage('SonarQube Analysis') {
             steps {
-                // Execute SonarQube analysis
-                script {
-                    sh """
-                        mvn clean verify sonar:sonar \
-                          -Dsonar.projectKey=sonarmaven \
-                          -Dsonar.projectName='sonarmaven' \
-                          -Dsonar.host.url=http://localhost:9000 \
-                          -Dsonar.login=${SONAR_TOKEN}
-                    """
-                }
+                bat """
+                mvn sonar:sonar ^
+                  -Dsonar.projectKey=maven-pro1 ^
+                  -Dsonar.host.url=http://localhost:9000 ^
+                  -Dsonar.login=${SONAR_TOKEN}
+                """
             }
         }
-        stage('Archive Artifacts') {
+        stage('Package') {
             steps {
-                // Archive the packaged artifact
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                bat "mvn package"
             }
         }
     }
 
     post {
         always {
-            // Clean up workspace
-            cleanWs()
+            cleanWs() // Ensure workspace cleanup after each run
         }
         success {
-            echo 'Pipeline executed successfully, including SonarQube analysis!'
+            echo 'Pipeline executed successfully!'
         }
         failure {
             echo 'Pipeline failed. Please check the logs for details.'
