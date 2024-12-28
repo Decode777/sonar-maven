@@ -6,7 +6,7 @@ pipeline {
     }
 
     environment {
-        SONAR_TOKEN = credentials('Sonarqube-token') // Replace with the correct credentials ID
+        SONAR_TOKEN = credentials('sonar-token') // Replace with the correct credentials ID
         JAVA_HOME = 'C:\\Program Files\\Java\\jdk-17' // Ensure this path is correct
         PATH = "${JAVA_HOME}\\bin;${env.PATH}"
     }
