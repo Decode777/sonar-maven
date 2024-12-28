@@ -31,7 +31,7 @@ pipeline {
             steps {
                 bat """
                 mvn sonar:sonar ^
-                  -Dsonar.projectKey=maven-pro1 ^
+                  -Dsonar.projectKey=my-maven-project ^
                   -Dsonar.host.url=http://localhost:9000 ^
                   -Dsonar.login=${SONAR_TOKEN}
                 """
